@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>คลื่นมรกต ต้นแบบเกมฝึกร่วม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/*CSS*/
+</style>
+</head>
+<body>
+<div id="app">
+
+<section id="scr-intro" class="scr intro">
+  <div class="intro-wrap">
+    <p class="kicker">ต้นแบบ v0.1 · เกมฝึกร่วม 3 เหล่าทัพ · ห้องปฏิบัติการร่วม</p>
+    <h1>คลื่นมรกต</h1>
+    <p class="lede">ยกพลขึ้นบก ยิงสนับสนุน และอพยพพลเรือนภายในเช้าเดียว เลือกนั่งได้ 13 ตำแหน่ง ตั้งแต่ผู้บัญชาการกองกำลังร่วมจนถึงนักบินและผู้ตรวจการณ์หน้า ตำแหน่งที่ไม่มีผู้เล่น AI ทำหน้าที่แทน</p>
+    <div class="tiles">
+      <div class="tile"><b>ห่วงโซ่ขอยิง</b><span>ผู้ตรวจการณ์ → ศูนย์อำนวยการยิง → FSCC ทวนกลับ ตรวจไขว้พิกัด และกันอากาศยานออกจากแนวยิง</span></div>
+      <div class="tile"><b>ลงจอดบนเรือที่โคลง</b><span>เข็มเรือ ลม และคลื่นกำหนดว่าเฮลิคอปเตอร์ลงได้หรือไม่ นักบินลงจอดเองในมินิเกม</span></div>
+      <div class="tile"><b>อพยพพลเรือน 600 คน</b><span>ด่านที่มีรถพลเรือน จุดคัดกรอง ข่าวปลอม และกฎการใช้กำลัง</span></div>
+    </div>
+    <div class="facts"><span><b>05:00–08:00</b> เวลาในเกม</span><span><b>≈18 นาที</b> ที่ความเร็ว ×10</span><span><b>13</b> ตำแหน่งเล่นได้ · <b>10</b> ตำแหน่ง AI</span><span><b>หน้าจอ AAR</b> เล่นซ้ำและให้คะแนนการตัดสินใจ</span></div>
+    <div class="cta">
+      <button class="btn primary big" data-act="go-lobby">เลือกตำแหน่ง →</button>
+      <button class="btn big" data-act="help">วิธีเล่น</button>
+      <button class="btn big" data-act="go-assume">สมมติฐานหลักนิยม (ให้เพื่อนเหล่าอื่นตรวจ)</button>
+    </div>
+    <p class="fine">สถานการณ์สมมติ นามเรียกขานสมมติ ตัวเลขทุกค่าเป็น "ค่าสาธิต" เพื่อออกแบบเกม ไม่ใช่ข้อมูลอาวุธหรือหลักนิยมจริง ต้องตรวจกับคู่มือของแต่ละเหล่าก่อนใช้ฝึกจริง</p>
+  </div>
+</section>
+
+<section id="scr-lobby" class="scr">
+  <header class="bar"><button class="btn ghost sm" data-act="go-intro">← หน้าแรก</button><h2>เลือกตำแหน่งในผังการจัดกำลัง</h2><span class="bar-note">ตำแหน่งที่ไม่มีผู้เล่น AI ทำหน้าที่แทนทั้งหมด</span></header>
+  <div class="lobby"><div class="orbat" id="orbat"></div><div class="seatinfo" id="seatinfo"></div></div>
+</section>
+
+<section id="scr-game" class="scr">
+  <header class="topbar">
+    <div class="tb-clock"><span id="clk" class="mono">05:00:00</span><span id="hrel" class="chip">H?</span><span id="phase" class="chip ghost">วางแผน</span></div>
+    <div class="tb-speed" id="speed" role="group" aria-label="ความเร็วเวลา"></div>
+    <div class="tb-right">
+      <label class="seatsel"><span>ตำแหน่ง</span><select id="seatSel" aria-label="เปลี่ยนตำแหน่ง"></select></label>
+      <button class="btn sm" data-act="wc" id="btnWC">ผู้ฝึก</button>
+      <button class="btn sm" data-act="help" aria-label="วิธีเล่น">?</button>
+      <button class="btn sm warn" data-act="end">จบ → AAR</button>
+    </div>
+  </header>
+  <div class="gamegrid">
+    <div class="mapwrap" id="mapwrap">
+      <canvas id="map" role="img" aria-label="แผนที่ภาพสถานการณ์ร่วม แสดงหน่วยตามตำแหน่งที่รายงานล่าสุด"></canvas>
+      <div class="hud" id="hud"></div>
+      <div class="toasts" id="toasts" aria-live="polite"></div>
+      <div class="mapctl">
+        <button data-act="zin" aria-label="ซูมเข้า">+</button><button data-act="zout" aria-label="ซูมออก">−</button><button data-act="zfit" aria-label="ดูทั้งพื้นที่">⤢</button><button data-act="zme" aria-label="ไปที่หน่วยของฉัน">◎</button><button data-act="legend" aria-label="คำอธิบายสัญลักษณ์">i</button>
+      </div>
+      <div class="legend" id="legend" hidden>
+        <i></i><span>ฝ่ายเรา (ตำแหน่งที่รายงานล่าสุด)</span>
+        <i class="st"></i><span>ภาพล้าสมัย ⌛ = นาทีตั้งแต่รายงาน</span>
+        <i class="h"></i><span>ข้าศึกที่ตรวจพบ</span>
+        <i class="u"></i><span>ไม่ทราบฝ่าย</span>
+        <i class="n"></i><span>พลเรือน/ฝ่ายเป็นกลาง</span>
+        <i class="nfa"></i><span>เขตห้ามยิง</span>
+        <i class="gtl"></i><span>แนวยิงปืนใหญ่ (แถบส้ม = กระสุนกำลังเดินทาง)</span>
+      </div>
+      <div class="selcard" id="selcard" hidden></div>
+      <button class="cfbtn" id="cfbtn" data-act="checkfire" title="ทุกคนกดได้เมื่อเห็นอันตราย">⚠ ระงับการยิง</button>
+    </div>
+    <aside class="panel" aria-label="แผงงาน">
+      <div class="tabs" role="tablist">
+        <button role="tab" data-tab="task">งาน <span class="badge" id="taskBadge"></span></button>
+        <button role="tab" data-tab="ctl">ควบคุม</button>
+        <button role="tab" data-tab="radio">วิทยุ</button>
+      </div>
+      <div class="tabbody" id="tabbody"></div>
+    </aside>
+  </div>
+</section>
+
+<section id="scr-aar" class="scr">
+  <header class="bar"><h2>การทบทวนหลังการฝึก (AAR)</h2><span class="bar-note" id="aarSeat"></span><div class="bar-right"><button class="btn sm" data-act="replay-same">เล่นตำแหน่งเดิมอีกครั้ง</button><button class="btn sm primary" data-act="go-lobby">เลือกตำแหน่งอื่น</button><button class="btn sm ghost" data-act="go-intro">หน้าแรก</button></div></header>
+  <div class="aar" id="aar"></div>
+</section>
+
+<section id="scr-assume" class="scr">
+  <header class="bar"><button class="btn ghost sm" data-act="go-intro">← หน้าแรก</button><h2>สมมติฐานหลักนิยมในต้นแบบ</h2><div class="bar-right"><button class="btn sm primary" data-act="copy-review">คัดลอกผลการตรวจ</button></div></header>
+  <div class="assume" id="assume"></div>
+</section>
+
+</div>
+<div id="scrim" class="scrim" hidden></div>
+<div id="sheet" class="sheet" role="dialog" aria-modal="false" aria-labelledby="shTitle" hidden></div>
+<div id="drawer" class="drawer" role="dialog" aria-label="แผงผู้ฝึก" hidden></div>
+<div id="mg" class="mg" role="dialog" aria-modal="true" aria-labelledby="mgTitle" hidden>
+  <div class="mg-box">
+    <div class="mg-head"><h3 id="mgTitle">ลงจอดบนเรือวารี</h3><span class="chip" id="mgMode"></span></div>
+    <canvas id="mgc" aria-label="มุมมองจากท้ายเรือ แสดงดาดฟ้าที่โคลงและเฮลิคอปเตอร์"></canvas>
+    <div class="mg-hud" id="mgHud"></div>
+    <div class="mg-ctl"><button class="btn primary big" id="mgDown">กดค้างเพื่อลดระดับ</button><button class="btn" data-act="mg-wave">ยกเลิกการลงจอด</button><button class="btn ghost" data-act="mg-auto">ให้ AI ลงจอด</button></div>
+    <p class="fine">กดค้าง (หรือ Space) เพื่อลดระดับ ปล่อยเพื่อชะลอ แตะดาดฟ้าเมื่ออัตราลดสัมพัทธ์ไม่เกิน 1.2 ม./วินาที และดาดฟ้าโคลงไม่เกิน 3.5° · รอจังหวะที่เรือนิ่ง</p>
+  </div>
+</div>
+<div id="dlg" class="dlg" role="dialog" aria-modal="true" hidden><div class="dlg-box" id="dlgBox"></div></div>
+<script>
+/*SIM*/
+</script>
+<script>
+/*RENDER*/
+</script>
+<script>
+/*UI*/
+</script>
+</body>
+</html>
